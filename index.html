@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Links da Planilha</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            padding-inline: 100px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #00272f;
+        }
+        .header img {
+            height: 60px;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+
+    <div class="container my-5">
+        <h1 class="h3">Links da Planilha</h1>
+        <div class="mb-3">
+            <input type="file" id="csvFileInput" class="form-control" accept=".csv" />
+        </div>
+        <button class="btn btn-primary mb-3" onclick="processCSV()">Carregar Links</button>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Numeração</th>
+                    <th scope="col">Ação</th>
+                </tr>
+            </thead>
+            <tbody id="whatsappTable">
+                <!-- Tabela será preenchida dinamicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        function processCSV() {
+            const fileInput = document.getElementById('csvFileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Por favor, faça o upload de uma planilha.");
+                return;
+            }
+
+            Papa.parse(file, {
+                complete: function(results) {
+                    const data = results.data;
+                    const contacts = [];
+                    let linkIndex = 1;
+
+                    // Itera sobre as linhas da planilha
+                    data.forEach(row => {
+                        row.forEach(cell => {
+                            if (isValidURL(cell)) {
+                                // Adiciona o link como um contato válido com uma numeração
+                                contacts.push({ link: cell, number: linkIndex++ });
+                            }
+                        });
+                    });
+
+                    populateTable(contacts);
+                }
+            });
+        }
+
+        // Verifica se o texto é um URL válido
+        function isValidURL(str) {
+            const pattern = new RegExp('^(https?:\\/\\/)?' + // protocolo
+                '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,}|' + // domínio
+                '((\\d{1,3}\\.){3}\\d{1,3}))' + // ou IP
+                '(\\:\\d+)?(\\/[-a-zA-Z\\d%_.~+]*)*' + // porta e caminho
+                '(\\?[;&a-zA-Z\\d%_.~+=-]*)?' + // query string
+                '(\\#[-a-zA-Z\\d_]*)?$', 'i'); // fragmento
+            return !!pattern.test(str);
+        }
+
+        function populateTable(contacts) {
+            const tableBody = document.getElementById('whatsappTable');
+            tableBody.innerHTML = ''; // Limpa a tabela existente
+
+            contacts.forEach(contact => {
+                const row = document.createElement('tr');
+
+                // Coluna Numeração
+                const numberCell = document.createElement('td');
+                numberCell.textContent = `Link ${contact.number}`;
+                row.appendChild(numberCell);
+
+                // Coluna Ação
+                const actionCell = document.createElement('td');
+                const button = document.createElement('button');
+                button.className = 'btn btn-success';
+                button.textContent = 'Abrir Link';
+
+                // Lógica do botão
+                button.onclick = function() {
+                    window.open(contact.link, '_blank');
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-secondary');
+                    this.textContent = 'Já aberto';
+                };
+
+                actionCell.appendChild(button);
+                row.appendChild(actionCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
